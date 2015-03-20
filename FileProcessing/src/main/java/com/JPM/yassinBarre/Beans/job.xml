@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch
+	http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+	http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/util 
+	http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+
+	<bean id="items"
+		class="com.JPM.Spring.yassinBarre.FileProcessing.model.Item"
+		scope="prototype" lazy-init="default">
+	</bean>
+
+	<bean id="stepScope" class="org.springframework.batch.core.scope.StepScope">
+		<property name="autoProxy" value="true" />
+	</bean>
+
+	<batch:job id="job">
+		<batch:step id="step1">
+			<batch:tasklet>
+				<batch:chunk reader="cvsFileItemReader" writer="cvsFileItemWriter"
+					commit-interval="5">
+				</batch:chunk>
+			</batch:tasklet>
+		</batch:step>
+	</batch:job>
+
+	<bean id="cvsFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+
+		<!-- Read a csv file -->
+		<property name="resource"
+			value="file:src/main/resources/cvs/input.csv" />
+
+		<property name="lineMapper">
+			<bean
+				class="org.springframework.batch.item.file.mapping.DefaultLineMapper"
+				autowire-candidate="false">
+				<!-- split it -->
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names"
+							value="instrument_type,name,quantity,buy_price,sell_price,coupon" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<!-- return back to reader, rather than a mapped object. -->
+					<!-- <bean class="org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper" 
+						/> -->
+					<!-- map to an object -->
+					<bean
+						class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper">
+						<property name="prototypeBeanName" value="items" />
+					</bean>
+				</property>
+
+			</bean>
+		</property>
+
+	</bean>
+
+	<bean id="cvsFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter">
+		<!-- write to this csv file -->
+		<property name="resource" value="file:src/main/resources/cvs/output.csv" />
+		<property name="shouldDeleteIfExists" value="true" />
+
+		<property name="lineAggregator">
+			<bean
+				class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+				<property name="delimiter" value="," />
+				<property name="fieldExtractor">
+					<bean
+						class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor">
+						<property name="names"
+							value="instrument_type,name,quantity,profit" />
+					</bean>
+				</property>
+			</bean>
+		</property>
+
+	</bean>
+
+	
+	<bean id="processor"
+		class="com.JPM.Spring.yassinBarre.FileProcessing.ProcessItems.ReportProcessor" scope= "step"
+		lazy-init="default">
+	</bean>
+</beans>
