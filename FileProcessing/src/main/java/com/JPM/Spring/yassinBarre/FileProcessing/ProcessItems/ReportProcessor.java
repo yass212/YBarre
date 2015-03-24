@@ -11,26 +11,26 @@ import com.JPM.Spring.yassinBarre.FileProcessing.model.Item;
 public class ReportProcessor implements ItemProcessor<Item, Item> {
 
 	/* code does not work yet , i'll work on it on my own time */
-	
+
 	@Override
 	public Item process(Item item) throws Exception {
 
 		double profit;
+		int result = 0;
 
 		if (item.getInstrument_type() == "Equity") {
-			profit = (Double.parseDouble(item.getSell_price()) - Double
+
+			profit = (Double.parseDouble(item.getSell_price()) + Double
 					.parseDouble(item.getBuy_price())) * item.getQuantity();
 			item.setProfit(profit);
-			return item;
 
 		} else if (item.getInstrument_type() == "Bond") {
 			profit = item.getQuantity() * Double.parseDouble(item.getCoupon());
 			item.setProfit(profit);
-			return item;
 
-		}else{
+		}
 
-			return null;
-	}
+		return item;
+
 	}
 }
